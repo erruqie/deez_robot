@@ -80,7 +80,9 @@ async def process_upc(message: types.Message, state: FSMContext):
             f = open(f"{funnymoment}/{x}","rb")
             await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
         await bot.send_message(message.from_user.id, "*Готово!*", parse_mode="markdown")
+        await state.finish()
         shutil.rmtree(aye, ignore_errors=True)
+        
 
 @dp.message_handler(state=UploadState.sending_isrc)
 async def process_isrc(message: types.Message, state: FSMContext):
@@ -121,6 +123,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
         f = open(f"{funnymoment}/{album} CD 1 TRACK {track_position} (128).mp3","rb")
         await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
         await bot.send_message(message.from_user.id, "*Готово!*", parse_mode="markdown")
+        await state.finish()
         shutil.rmtree(aye, ignore_errors=True)
 
 
