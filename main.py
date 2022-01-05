@@ -58,6 +58,10 @@ async def process_upc(message: types.Message, state: FSMContext):
         covermd5 = data["md5_image"]
         nb_tracks = data["nb_tracks"]
         label = data["label"]
+        if label == "Firect Music":
+            await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+            await state.finish()
+            return
         if nb_tracks == 1:
             duration = data["duration"]
             explicit_lyrics = data["explicit_lyrics"]
@@ -134,6 +138,10 @@ async def process_isrc(message: types.Message, state: FSMContext):
         response = requests.get(link).text
         data = json.loads(response)
         label = data["label"]
+        if label == "Firect Music":
+            await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+            await state.finish()
+            return
         os.makedirs("tracks", exist_ok=True)
         output_dir = f"tracks/{artist} - {album}"
         download.download_trackdee(f"{track_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
