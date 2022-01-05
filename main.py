@@ -47,6 +47,7 @@ async def process_upc(message: types.Message, state: FSMContext):
     data = json.loads(response)
     if 'error' in data:
         await message.reply("К сожалению по этому треку нет информации\nUPC: " + upc)
+        await state.finish()
     else:
         album_link = data["link"]
         artist = data["artist"]["name"]
@@ -92,6 +93,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
     data = json.loads(response)
     if 'error' in data:
         await message.reply("К сожалению по этому треку нет информации")
+        await state.finish()
     else:
         track_link = data["link"]
         artist = data["artist"]["name"]
