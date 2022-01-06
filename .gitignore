@@ -3,3 +3,4 @@ __pycache__
 tracks
 config.py
 .venv
+captions.py

@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import config
+import captions
 
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher, FSMContext
@@ -101,10 +102,16 @@ async def process_upc(message: types.Message, state: FSMContext):
         xd = os.listdir(aye)
         funnymoment = f"{aye}/{xd[0]}"
         kolvotracks = os.listdir(funnymoment)
-        
+        captionid = "captions." + "id" + str(message.chat.id)
+
         for x in kolvotracks:
             f = open(f"{funnymoment}/{x}","rb")
-            await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+            try:
+                audio_caption = eval(captionid)[0]
+                await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
+            except:
+                await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+            
         await message.reply("*Готово!*", parse_mode="markdown")
         await startdownload.delete()
         await state.finish()
@@ -155,7 +162,6 @@ async def process_isrc(message: types.Message, state: FSMContext):
         aye = f"tracks/{artist} - {album}"
         xd = os.listdir(aye)
         funnymoment = f"{aye}/{xd[0]}"
-        kolvotracks = os.listdir(funnymoment)
         upc = re.findall(r'\b\d+\b', xd[0])
         
         if cover is None:
@@ -163,8 +169,13 @@ async def process_isrc(message: types.Message, state: FSMContext):
         else:
             await bot.send_photo(message.chat.id, cover, f"*{artist} - {title}*\n\n*Альбом:* _{album}_\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*Позиция в альбоме:* _{track_position}_\n*ISRC:* _{isrc}_\n*UPC:* _{upc[0]}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
         sendingtrack = await bot.send_message(message.from_user.id, "*Отправляю трек!*", parse_mode="markdown")
+        captionid = "captions." + "id" + str(message.chat.id)
         f = open(f"{funnymoment}/{album} CD 1 TRACK {track_position} (128).mp3","rb")
-        await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+        try:
+            audio_caption = eval(captionid)[0]
+            await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
+        except:
+            await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
         await message.reply("*Готово!*", parse_mode="markdown")
         await sendingtrack.delete()
         await state.finish()
@@ -229,10 +240,16 @@ async def process_link(message: types.Message, state: FSMContext):
         xd = os.listdir(aye)
         funnymoment = f"{aye}/{xd[0]}"
         kolvotracks = os.listdir(funnymoment)
-        
+        captionid = "captions." + "id" + str(message.chat.id)
+
         for x in kolvotracks:
             f = open(f"{funnymoment}/{x}","rb")
-            await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+            try:
+                audio_caption = eval(captionid)[0]
+                await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
+            except:
+                await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+
         await message.reply("*Готово!*", parse_mode="markdown")
         await startdownload.delete()
         await state.finish()
