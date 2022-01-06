@@ -1,5 +1,4 @@
 import logging
-from platform import release
 import requests
 import json
 import datetime
@@ -278,7 +277,6 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
     data = aboba.split(separator)
     os.makedirs("tracks", exist_ok=True)
     if data[1] == "album":
-        output_dir = f"tracks/albums"
         req = f"https://api.spotify.com/v1/albums/{data[2]}"
         response = requests.get(req, headers=spotify_auth.headers).text
         albumdata = json.loads(response)
@@ -287,6 +285,8 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         release_date = albumdata["release_date"]
         total_tracks = albumdata["total_tracks"]
         copyright = albumdata["copyrights"][0]["text"]
+        albumname = albumdata["name"]
+        output_dir = f"tracks/albums/{albumname}"
         if "Firect Music" in copyright:
             await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
             await state.finish()
@@ -302,7 +302,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         separator = " - "
         separator_title = "/"
         splited = releasedir.split(separator)
-        artists = splited[1]
+        artists = splited[1].replace("  ", ", ")
         title_tosplit = splited[0]
         title = title_tosplit.split(separator_title)[2]
         kolvotracks = os.listdir(releasedir)
@@ -354,7 +354,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
         splited = releasedir.split(separator)
-        artists = splited[1]
+        artists = splited[1].replace("  ", ", ")
         captionid = "captions." + "id" + str(message.chat.id)
         kolvotracks = os.listdir(releasedir)
         await bot.send_photo(message.from_user.id, cover, f"*{artists} - {title}*\n\n*Альбом:* _{album}_\n*Дата релиза:* _{release_date}_\n*UPC:* _{dee_upc}_\n*ISRC:* _{isrc}_\n*Позиция в альбоме:* _{track_number}_\n\n[Слушать в Deezer]({dee_album_link})", parse_mode="markdown")
