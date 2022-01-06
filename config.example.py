@@ -1,2 +1,4 @@
-TOKEN = "123123:xyzxyzxyz"
-deezer_arl = "ABCDFDIJDFIGDMINFGMDFGIJDFIGDKJGIFODKJIOJSFIOSJFIOSNFSDKLF"
+TOKEN = "yourtgbottoken"
+deezer_arl = "yourdeezerarl"
+spotify_client_id = 'yourclientid'
+spotify_client_secret = 'yourclientsecret'
