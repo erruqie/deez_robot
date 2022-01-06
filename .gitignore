@@ -5,3 +5,4 @@ config.py
 .venv
 captions.py
 .cache_spoty_token.json
+*.sh
