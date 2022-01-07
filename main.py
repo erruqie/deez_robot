@@ -19,8 +19,8 @@ from deezloader.deezloader import DeeLogin
 from deezloader.exceptions import InvalidLink
 from urllib.parse import urlparse
 from states import UploadState
-from utils import spotify_auth
 from utils import check_label
+from utils import spotify
 
 logging.basicConfig(level=logging.INFO)
 
@@ -278,7 +278,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
     os.makedirs("tracks", exist_ok=True)
     if data[1] == "album":
         req = f"https://api.spotify.com/v1/albums/{data[2]}"
-        response = requests.get(req, headers=spotify_auth.headers).text
+        response = requests.get(req, headers=spotify.auth()).text
         albumdata = json.loads(response)
         upc = albumdata["external_ids"]["upc"]
         cover = albumdata["images"][0]["url"]
@@ -323,7 +323,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         
     elif data[1] == "track":
         req = f"https://api.spotify.com/v1/tracks/{data[2]}"
-        response = requests.get(req, headers=spotify_auth.headers).text
+        response = requests.get(req, headers=spotify.auth()).text
         trackdata = json.loads(response)
         album = trackdata["album"]["name"]
         cover = trackdata["album"]["images"][0]["url"]
