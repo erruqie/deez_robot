@@ -103,7 +103,7 @@ async def process_upc(message: types.Message, state: FSMContext):
                 await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
             else:
                 await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-        startdownload = await bot.send_message(message.from_user.id, "*Начинаю скачивание!*", parse_mode="markdown")
+        startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
         download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
 
         aye = f"tracks/{artist} - {title}"
@@ -176,7 +176,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
             await bot.send_photo(message.chat.id, md5link, f"*{artist} - {title}*\n\n*Альбом:* _{album}_\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*Позиция в альбоме:* _{track_position}_\n*ISRC:* _{isrc}_\n*UPC:* _{upc[0]}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
         else:
             await bot.send_photo(message.chat.id, cover, f"*{artist} - {title}*\n\n*Альбом:* _{album}_\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*Позиция в альбоме:* _{track_position}_\n*ISRC:* _{isrc}_\n*UPC:* _{upc[0]}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-        sendingtrack = await bot.send_message(message.from_user.id, "*Отправляю трек!*", parse_mode="markdown")
+        sendingtrack = await message.answer("*Отправляю трек!*", parse_mode="markdown")
         captionid = "captions." + "id" + str(message.chat.id)
         f = open(f"{funnymoment}/{album} CD 1 TRACK {track_position} (128).mp3","rb")
         try:
@@ -196,30 +196,96 @@ async def process_link(message: types.Message, state: FSMContext):
     parse_object = urlparse(link)
     aboba = parse_object.path
     data = aboba.split(separator)
-    if data[1] == "album":
-        albumid = data[2]
-        link = f"https://api.deezer.com/album/" + str(albumid)
-        response = requests.get(link).text
-        data = json.loads(response)
-        if 'error' in data:
-            await message.reply("К сожалению по этому треку нет информации\nAlbumId: " + str(albumid))
-            await state.finish()
-        else:
-            upc = data["upc"]
-            album_link = data["link"]
-            artist = data["artist"]["name"]
-            title = data["title"]
-            date = data["release_date"]	
-            track_link = data["link"]
-            cover = data["cover_xl"]
-            covermd5 = data["md5_image"]
-            nb_tracks = data["nb_tracks"]
-            label = data["label"]
-            if label == "Firect Music":
-                await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+    if data[1] != "album" and data[1] != "track":
+        if data[2] == "album":
+            albumid = data[3]
+            link = f"https://api.deezer.com/album/" + str(albumid)
+            response = requests.get(link).text
+            data = json.loads(response)
+            if 'error' in data:
+                await message.reply("К сожалению по этому треку нет информации\nAlbumId: " + str(albumid))
                 await state.finish()
-                return
-            if nb_tracks == 1:
+            else:
+                upc = data["upc"]
+                album_link = data["link"]
+                artist = data["artist"]["name"]
+                title = data["title"]
+                date = data["release_date"]	
+                track_link = data["link"]
+                cover = data["cover_xl"]
+                covermd5 = data["md5_image"]
+                nb_tracks = data["nb_tracks"]
+                label = data["label"]
+                if label == "Firect Music":
+                    await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                    await state.finish()
+                    return
+                if nb_tracks == 1:
+                    duration = data["duration"]
+                    explicit_lyrics = data["explicit_lyrics"]
+                    dur = str(datetime.timedelta(seconds=duration))
+                    if explicit_lyrics == False:
+                        exp = "Нет"
+                    else:
+                        exp = "Да"
+                os.makedirs("tracks", exist_ok=True)
+                output_dir = f"tracks/{artist} - {title}"
+                md5link = f"http://e-cdn-images.dzcdn.net/images/cover/{covermd5}/1000x1000-000000-80-0-0.jpg"
+                if nb_tracks > 1:
+                    if cover is None:
+                        await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*UPC:* _{upc}_\n*Лейбл:* _{label}_\n*Дата релиза:* _{date}_\n*Количество треков:* _{nb_tracks}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                    else:
+                        await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*UPC:* _{upc}_\n*Лейбл:* _{label}_\n*Дата релиза:* _{date}_\n*Количество треков:* _{nb_tracks}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                elif nb_tracks == 1:
+                    trackid = data["tracks"]["data"][0]["id"]
+                    link = f"https://api.deezer.com/track/" + str(trackid)
+                    response = requests.get(link).text
+                    data = json.loads(response)
+                    isrc = data["isrc"]
+                    if cover is None:
+                        await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                    else:
+                        await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
+                download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
+
+                aye = f"tracks/{artist} - {title}"
+                xd = os.listdir(aye)
+                funnymoment = f"{aye}/{xd[0]}"
+                kolvotracks = os.listdir(funnymoment)
+                captionid = "captions." + "id" + str(message.chat.id)
+
+                for x in kolvotracks:
+                    f = open(f"{funnymoment}/{x}","rb")
+                    try:
+                        audio_caption = eval(captionid)[0]
+                        await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
+                    except:
+                        await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+
+                await message.reply("*Готово!*", parse_mode="markdown")
+                await startdownload.delete()
+                await state.finish()
+                shutil.rmtree(aye, ignore_errors=True)
+        elif data[2] == "track":
+            trackid = data[3]
+            link = f"https://api.deezer.com/track/" + str(trackid)
+            response = requests.get(link).text
+            data = json.loads(response)
+            if 'error' in data:
+                await message.reply("К сожалению по этому треку нет информации\nTrackId: " + str(trackid))
+                await state.finish()
+            else:
+                isrc = data["isrc"]
+                album_link = data["album"]["link"]
+                albumid =  data["album"]["id"]
+                artist = data["artist"]["name"]
+                title = data["title"]
+                date = data["album"]["release_date"]	
+                track_link = data["link"]
+                cover = data["album"]["cover_xl"]
+                covermd5 = data["album"]["md5_image"]
+                track_position = data["track_position"]
                 duration = data["duration"]
                 explicit_lyrics = data["explicit_lyrics"]
                 dur = str(datetime.timedelta(seconds=duration))
@@ -227,111 +293,46 @@ async def process_link(message: types.Message, state: FSMContext):
                     exp = "Нет"
                 else:
                     exp = "Да"
-            os.makedirs("tracks", exist_ok=True)
-            output_dir = f"tracks/{artist} - {title}"
-            md5link = f"http://e-cdn-images.dzcdn.net/images/cover/{covermd5}/1000x1000-000000-80-0-0.jpg"
-            if nb_tracks > 1:
-                if cover is None:
-                    await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*UPC:* _{upc}_\n*Лейбл:* _{label}_\n*Дата релиза:* _{date}_\n*Количество треков:* _{nb_tracks}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-                else:
-                    await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*UPC:* _{upc}_\n*Лейбл:* _{label}_\n*Дата релиза:* _{date}_\n*Количество треков:* _{nb_tracks}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-            elif nb_tracks == 1:
-                trackid = data["tracks"]["data"][0]["id"]
-                link = f"https://api.deezer.com/track/" + str(trackid)
+
+                link = f"https://api.deezer.com/album/" + str(albumid)
                 response = requests.get(link).text
                 data = json.loads(response)
-                isrc = data["isrc"]
+
+                label = data["label"]
+                upc = data["upc"]
+
+                if label == "Firect Music":
+                    await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                    await state.finish()
+                    return
+                os.makedirs("tracks", exist_ok=True)
+                output_dir = f"tracks/{artist} - {title}"
+                md5link = f"http://e-cdn-images.dzcdn.net/images/cover/{covermd5}/1000x1000-000000-80-0-0.jpg"
                 if cover is None:
                     await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
                 else:
                     await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-            startdownload = await bot.send_message(message.from_user.id, "*Начинаю скачивание!*", parse_mode="markdown")
-            download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
+                startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
+                download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
 
-            aye = f"tracks/{artist} - {title}"
-            xd = os.listdir(aye)
-            funnymoment = f"{aye}/{xd[0]}"
-            kolvotracks = os.listdir(funnymoment)
-            captionid = "captions." + "id" + str(message.chat.id)
+                aye = f"tracks/{artist} - {title}"
+                xd = os.listdir(aye)
+                funnymoment = f"{aye}/{xd[0]}"
+                kolvotracks = os.listdir(funnymoment)
+                captionid = "captions." + "id" + str(message.chat.id)
 
-            for x in kolvotracks:
-                f = open(f"{funnymoment}/{x}","rb")
-                try:
-                    audio_caption = eval(captionid)[0]
-                    await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
-                except:
-                    await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
+                for x in kolvotracks:
+                    f = open(f"{funnymoment}/{x}","rb")
+                    try:
+                        audio_caption = eval(captionid)[0]
+                        await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
+                    except:
+                        await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
 
-            await message.reply("*Готово!*", parse_mode="markdown")
-            await startdownload.delete()
-            await state.finish()
-            shutil.rmtree(aye, ignore_errors=True)
-    elif data[1] == "track":
-        trackid = data[2]
-        link = f"https://api.deezer.com/track/" + str(trackid)
-        response = requests.get(link).text
-        data = json.loads(response)
-        if 'error' in data:
-            await message.reply("К сожалению по этому треку нет информации\nTrackId: " + str(trackid))
-            await state.finish()
-        else:
-            isrc = data["isrc"]
-            album_link = data["album"]["link"]
-            albumid =  data["album"]["id"]
-            artist = data["artist"]["name"]
-            title = data["title"]
-            date = data["album"]["release_date"]	
-            track_link = data["link"]
-            cover = data["album"]["cover_xl"]
-            covermd5 = data["album"]["md5_image"]
-            track_position = data["track_position"]
-            duration = data["duration"]
-            explicit_lyrics = data["explicit_lyrics"]
-            dur = str(datetime.timedelta(seconds=duration))
-            if explicit_lyrics == False:
-                exp = "Нет"
-            else:
-                exp = "Да"
-
-            link = f"https://api.deezer.com/album/" + str(albumid)
-            response = requests.get(link).text
-            data = json.loads(response)
-
-            label = data["label"]
-            upc = data["upc"]
-
-            if label == "Firect Music":
-                await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                await message.reply("*Готово!*", parse_mode="markdown")
+                await startdownload.delete()
                 await state.finish()
-                return
-            os.makedirs("tracks", exist_ok=True)
-            output_dir = f"tracks/{artist} - {title}"
-            md5link = f"http://e-cdn-images.dzcdn.net/images/cover/{covermd5}/1000x1000-000000-80-0-0.jpg"
-            if cover is None:
-                await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-            else:
-                await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-            startdownload = await bot.send_message(message.from_user.id, "*Начинаю скачивание!*", parse_mode="markdown")
-            download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
-
-            aye = f"tracks/{artist} - {title}"
-            xd = os.listdir(aye)
-            funnymoment = f"{aye}/{xd[0]}"
-            kolvotracks = os.listdir(funnymoment)
-            captionid = "captions." + "id" + str(message.chat.id)
-
-            for x in kolvotracks:
-                f = open(f"{funnymoment}/{x}","rb")
-                try:
-                    audio_caption = eval(captionid)[0]
-                    await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
-                except:
-                    await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
-
-            await message.reply("*Готово!*", parse_mode="markdown")
-            await startdownload.delete()
-            await state.finish()
-            shutil.rmtree(aye, ignore_errors=True)
+                shutil.rmtree(aye, ignore_errors=True)
 
 @dp.message_handler(state=UploadState.sending_spotify_link)
 async def process_spotify_link(message: types.Message, state: FSMContext):
@@ -365,7 +366,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         response = requests.get(deezer_req).text
         dee_data = json.loads(response)
         dee_album_link = dee_data["link"]
-        startdownload = await bot.send_message(message.from_user.id, "*Начинаю скачивание!*", parse_mode="markdown")
+        startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
         download.download_albumspo(f"https://open.spotify.com/album/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
@@ -418,7 +419,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         
         output_dir = f"tracks/singles/{title}"
         disc_number = trackdata["disc_number"]
-        startdownload = await bot.send_message(message.from_user.id, "*Начинаю скачивание!*", parse_mode="markdown")
+        startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
         download.download_trackspo(f"https://open.spotify.com/track/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
