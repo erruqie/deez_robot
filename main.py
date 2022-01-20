@@ -46,7 +46,7 @@ async def album_download(message: types.Message):
 
 @dp.message_handler(commands=['link'], state=None)
 async def link_download(message: types.Message):
-    await message.reply("*Отправьте ссылку на релиз в Deezer\nПример ссылок:* _https://www.deezer.com/album/284305192\nhttps://www.deezer.com/track/1607998182_", parse_mode="markdown")
+    await message.reply("*Отправьте ссылку на релиз в Deezer\nПримеры ссылок:* \n_https://www.deezer.com/album/284305192\nhttps://www.deezer.com/track/1607998182_", parse_mode="markdown")
     await UploadState.sending_link.set()
 
 @dp.message_handler(commands=['spotify'], state=None)
@@ -199,6 +199,10 @@ async def process_isrc(message: types.Message, state: FSMContext):
 @dp.message_handler(state=UploadState.sending_link)
 async def process_link(message: types.Message, state: FSMContext):
     link = message.text
+    if not validators.url(link):
+        await message.reply("*Вы отправили невалидную ссылку!\nПримеры ссылок:* \n_https://www.deezer.com/album/284305192\nhttps://www.deezer.com/track/1607998182_", parse_mode="markdown")
+        await state.finish()
+        return
     separator = "/"
     parse_object = urlparse(link)
     aboba = parse_object.path
