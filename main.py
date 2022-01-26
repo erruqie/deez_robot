@@ -108,7 +108,7 @@ async def process_upc(message: types.Message, state: FSMContext):
         try:
             download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
         except:
-            await message.answer("Произошла ошибка! Сообщите разработчику")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
             await state.finish()
         xd = os.listdir(output_dir)
         funnymoment = f"{output_dir}/{xd[0]}"
@@ -171,7 +171,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
         try:
             download.download_trackdee(f"{track_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
         except:
-            await message.answer("Произошла ошибка! Сообщите разработчику")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
             await state.finish()
         xd = os.listdir(output_dir)
         funnymoment = f"{output_dir}/{xd[0]}"
@@ -262,7 +262,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("Произошла ошибка! Сообщите разработчику")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
                     await state.finish()
                     return
                 xd = os.listdir(output_dir)
@@ -331,7 +331,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("Произошла ошибка! Сообщите разработчику")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
                     await state.finish()
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
@@ -407,7 +407,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("Произошла ошибка! Сообщите разработчику")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
                     await state.finish()
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
@@ -448,6 +448,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 duration = data["duration"]
                 explicit_lyrics = data["explicit_lyrics"]
                 dur = str(datetime.timedelta(seconds=duration))
+                md5link = f"http://e-cdn-images.dzcdn.net/images/cover/{covermd5}/1000x1000-000000-80-0-0.jpg"
                 if explicit_lyrics == False:
                     exp = "Нет"
                 else:
@@ -456,26 +457,34 @@ async def process_link(message: types.Message, state: FSMContext):
                 link = f"https://api.deezer.com/album/" + str(albumid)
                 response = requests.get(link).text
                 data = json.loads(response)
-
-                label = data["label"]
-                upc = data["upc"]
-
-                if label in config.dmca_labels:
-                    await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
-                    await state.finish()
-                    return
+                if 'error' in data:
+                    
+                    if cover is None:
+                        await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*ISRC:* _{isrc}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                        await message.reply("😔 К сожалению по этому альбому нет подробной информации")
+                    else:
+                        await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*ISRC:* _{isrc}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                        await message.reply("😔 К сожалению по этому альбому нет подробной информации")
+                else:
+                    label = data["label"]
+                    upc = data["upc"]
+                    if label in config.dmca_labels:
+                        await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
+                        await state.finish()
+                        return
+                    if cover is None:
+                        await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                    else:
+                        await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                
                 os.makedirs("tracks", exist_ok=True)
                 output_dir = f"tracks/{artist} - {title}"
-                md5link = f"http://e-cdn-images.dzcdn.net/images/cover/{covermd5}/1000x1000-000000-80-0-0.jpg"
-                if cover is None:
-                    await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-                else:
-                    await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*UPC:* _{upc}_\n*ISRC:* _{isrc}_\n*Лейбл:* _{label}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
+                
                 startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
                 try:
                     download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("Произошла ошибка! Сообщите разработчику")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
                     await state.finish()
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
@@ -531,7 +540,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         try:
             download.download_albumspo(f"https://open.spotify.com/album/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
-            await message.answer("Произошла ошибка! Сообщите разработчику")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
             await state.finish()
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
@@ -598,7 +607,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         try:
             download.download_trackspo(f"https://open.spotify.com/track/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
-            await message.answer("😔 Произошла ошибка! Сообщите разработчику")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
             await state.finish()
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
