@@ -8,47 +8,56 @@ import shutil
 import config
 import captions
 import validators
-
-from aiogram import Bot, types
+from aiogram import Bot, types, filters
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
-from aiogram.types import InputFile
+from aiogram.types import InputFile, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from deezloader.deezloader import DeeLogin
 from deezloader.exceptions import InvalidLink
 from urllib.parse import urlparse
 from states import UploadState
 from utils import spotify
-
 logging.basicConfig(level=logging.INFO)
-
 bot = Bot(token=config.TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
-
 download = DeeLogin(arl = config.deezer_arl)
 
-@dp.message_handler(commands=['start'])
+@dp.message_handler(filters.CommandStart())
 async def start(message: types.Message):
-    await message.reply("*🔥 Привет! Я бот для скачивания треков с Deezer\n🤖 Вот что я умею:\n/isrc* - _скачивание трека по ISRC за 9 часов до релиза_\n*/upc* - _скачивание альбома по UPC за 9 часов до релиза_\n*/link* - _скачивание релиза по ссылке за 9 часов до релиза_\n*/spotify* - _скачивание релиза по ссылке из spotify_\n\n*🧑‍💻 Разработчик: @uzkwphq*", parse_mode="markdown")
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    button_upc = KeyboardButton('Поиск по UPC')
+    button_isrc = KeyboardButton('Поиск по ISRC')
+    button_link = KeyboardButton('Поиск по ссылке с Deezer')
+    button_spotify = KeyboardButton('Поиск по ссылке с Spotify')
+    button_donate = KeyboardButton('Поддержать автора')
+    keyboard.row(button_upc, button_isrc, button_link, button_spotify)
+    keyboard.add(button_donate)
+    await message.reply("*🔥 Привет! Я бот для скачивания треков с Deezer\n🤖 Вот что я умею:\n/isrc* - _скачивание трека по ISRC за 9 часов до релиза_\n*/upc* - _скачивание альбома по UPC за 9 часов до релиза_\n*/link* - _скачивание релиза по ссылке за 9 часов до релиза_\n*/spotify* - _скачивание релиза по ссылке из spotify_\n\n*🧑‍💻 Разработчик: @uzkwphq*", parse_mode="markdown", reply_markup=keyboard)
 
+@dp.message_handler(filters.Text(equals=['Поддержать автора', '/donate']), state=None)
+async def donate(message: types.Message):
+    donatekb = InlineKeyboardMarkup()
+    donatekb.add(InlineKeyboardButton('Поддержать меня!', url='https://yoomoney.ru/to/4100112259262413'))
+    await message.answer(f'*Deez Robot был создан одним лишь одним энтузиазтом-сливером на абсолютно бесплатной основе, да и к тому же с открытым исходным кодом.*\nБлагодаря твоему донату, у меня прибавится мотивация продолжать разработку этого бота и содержать его, чтобы именно ты мог им пользоваться!',parse_mode="markdown", reply_markup=donatekb)
 
-@dp.message_handler(commands=['upc'], state=None)
+@dp.message_handler(filters.Text(equals=['Поиск по UPC', '/upc']), state=None)
 async def album_download(message: types.Message):
     await message.reply("Введите UPC:")
     await UploadState.sending_upc.set()
 
-@dp.message_handler(commands=['isrc'], state=None)
+@dp.message_handler(filters.Text(equals=['Поиск по ISRC', '/isrc']), state=None)
 async def album_download(message: types.Message):
     await message.reply("Введите ISRC:")
     await UploadState.sending_isrc.set()
 
-@dp.message_handler(commands=['link'], state=None)
+@dp.message_handler(filters.Text(equals=['Поиск по ссылке с Deezer','/link']), state=None)
 async def link_download(message: types.Message):
     await message.reply("*Отправьте ссылку на релиз в Deezer\nПримеры ссылок:* \n_https://www.deezer.com/album/284305192\nhttps://www.deezer.com/track/1607998182_", parse_mode="markdown")
     await UploadState.sending_link.set()
 
-@dp.message_handler(commands=['spotify'], state=None)
+@dp.message_handler(filters.Text(equals=['Поиск по ссылке с Spotify','/spotify']), state=None)
 async def spotify_download(message: types.Message):
     await message.reply("Отправь ссылку на трек в Spotify")
     await UploadState.sending_spotify_link.set()
@@ -60,7 +69,7 @@ async def process_upc(message: types.Message, state: FSMContext):
     response = requests.get(link).text
     data = json.loads(response)
     if 'error' in data:
-        await message.reply("К сожалению по этому треку нет информации\nUPC: " + upc)
+        await message.reply("😔 К сожалению по этому треку нет информации\nUPC: " + upc)
         await state.finish()
     else:
         album_link = data["link"]
@@ -137,7 +146,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
     response = requests.get(link).text
     data = json.loads(response)
     if 'error' in data:
-        await message.reply("К сожалению по этому треку нет информации")
+        await message.reply("😔 К сожалению по этому треку нет информации")
         await state.finish()
     else:
         track_link = data["link"]
@@ -214,7 +223,7 @@ async def process_link(message: types.Message, state: FSMContext):
             response = requests.get(link).text
             data = json.loads(response)
             if 'error' in data:
-                await message.reply("К сожалению по этому треку нет информации\nAlbumId: " + str(albumid))
+                await message.reply("😔 К сожалению по этому треку нет информации\nAlbumId: " + str(albumid))
                 await state.finish()
             else:
                 upc = data["upc"]
@@ -290,7 +299,7 @@ async def process_link(message: types.Message, state: FSMContext):
             response = requests.get(link).text
             data = json.loads(response)
             if 'error' in data:
-                await message.reply("К сожалению по этому треку нет информации\nTrackId: " + str(trackid))
+                await message.reply("😔 К сожалению по этому треку нет информации\nTrackId: " + str(trackid))
                 await state.finish()
             else:
                 isrc = data["isrc"]
@@ -361,7 +370,7 @@ async def process_link(message: types.Message, state: FSMContext):
             response = requests.get(link).text
             data = json.loads(response)
             if 'error' in data:
-                await message.reply("К сожалению по этому треку нет информации\nAlbumId: " + str(albumid))
+                await message.reply("😔 К сожалению по этому треку нет информации\nAlbumId: " + str(albumid))
                 await state.finish()
             else:
                 upc = data["upc"]
@@ -436,7 +445,7 @@ async def process_link(message: types.Message, state: FSMContext):
             response = requests.get(link).text
             data = json.loads(response)
             if 'error' in data:
-                await message.reply("К сожалению по этому треку нет информации\nTrackId: " + str(trackid))
+                await message.reply("😔 К сожалению по этому треку нет информации\nTrackId: " + str(trackid))
                 await state.finish()
             else:
                 isrc = data["isrc"]
@@ -465,10 +474,10 @@ async def process_link(message: types.Message, state: FSMContext):
                     
                     if cover is None:
                         await bot.send_photo(message.from_user.id, md5link, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*ISRC:* _{isrc}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-                        await message.reply("😔 К сожалению по этому альбому нет подробной информации")
+                        await message.answer("😔 К сожалению по этому альбому нет более подробной информации")
                     else:
                         await bot.send_photo(message.from_user.id, cover, f"*{artist} - {title}*\n\n*Длительность:* _{dur}_\n*Ненормативная лексика:* _{exp}_\n*Дата релиза:* _{date}_\n*ISRC:* _{isrc}_\n\n[Слушать на Deezer]({track_link})", parse_mode="markdown")
-                        await message.reply("😔 К сожалению по этому альбому нет подробной информации")
+                        await message.answer("😔 К сожалению по этому альбому нет более подробной информации")
                 else:
                     label = data["label"]
                     upc = data["upc"]
@@ -634,6 +643,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         await startdownload.delete()
         await state.finish()
         shutil.rmtree(releasedir, ignore_errors=True)
+
 if __name__ == '__main__':
     executor.start_polling(dp)
-
+    
