@@ -19,7 +19,6 @@ from deezloader.deezloader import DeeLogin
 from deezloader.exceptions import InvalidLink
 from urllib.parse import urlparse
 from states import UploadState
-from utils import check_label
 from utils import spotify
 
 logging.basicConfig(level=logging.INFO)
@@ -73,8 +72,8 @@ async def process_upc(message: types.Message, state: FSMContext):
         covermd5 = data["md5_image"]
         nb_tracks = data["nb_tracks"]
         label = data["label"]
-        if label == "Firect Music":
-            await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+        if label in config.dmca_labels:
+            await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
             await state.finish()
             return
         if nb_tracks == 1:
@@ -163,8 +162,8 @@ async def process_isrc(message: types.Message, state: FSMContext):
         response = requests.get(link).text
         data = json.loads(response)
         label = data["label"]
-        if label == "Firect Music":
-            await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+        if label in config.dmca_labels:
+            await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
             await state.finish()
             return
         os.makedirs("tracks", exist_ok=True)
@@ -207,7 +206,7 @@ async def process_link(message: types.Message, state: FSMContext):
     parse_object = urlparse(link)
     aboba = parse_object.path
     data = aboba.split(separator)
-    if data[1] != "album" and data[1] != "track":
+    if data[1] != 'album' and data[1] != 'track':
         if data[2] == "album":
             albumid = data[3]
             link = f"https://api.deezer.com/album/" + str(albumid)
@@ -227,8 +226,8 @@ async def process_link(message: types.Message, state: FSMContext):
                 covermd5 = data["md5_image"]
                 nb_tracks = data["nb_tracks"]
                 label = data["label"]
-                if label == "Firect Music":
-                    await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                if label in config.dmca_labels:
+                    await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
                 if nb_tracks == 1:
@@ -265,6 +264,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 except:
                     await message.answer("Произошла ошибка! Сообщите разработчику")
                     await state.finish()
+                    return
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
                 kolvotracks = os.listdir(funnymoment)
@@ -316,8 +316,8 @@ async def process_link(message: types.Message, state: FSMContext):
                 label = data["label"]
                 upc = data["upc"]
 
-                if label == "Firect Music":
-                    await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                if label in config.dmca_labels:
+                    await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
                 os.makedirs("tracks", exist_ok=True)
@@ -350,7 +350,8 @@ async def process_link(message: types.Message, state: FSMContext):
                 await startdownload.delete()
                 await state.finish()
                 shutil.rmtree(output_dir, ignore_errors=True)
-    else:
+
+    elif data[1] == "track" or data[1] == 'album':
         if data[1] == "album":
             albumid = data[2]
             link = f"https://api.deezer.com/album/" + str(albumid)
@@ -370,8 +371,8 @@ async def process_link(message: types.Message, state: FSMContext):
                 covermd5 = data["md5_image"]
                 nb_tracks = data["nb_tracks"]
                 label = data["label"]
-                if label == "Firect Music":
-                    await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                if label in config.dmca_labels:
+                    await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
                 if nb_tracks == 1:
@@ -425,8 +426,8 @@ async def process_link(message: types.Message, state: FSMContext):
                 await startdownload.delete()
                 await state.finish()
                 shutil.rmtree(output_dir, ignore_errors=True)
-        elif data[2] == "track":
-            trackid = data[3]
+        elif data[1] == "track":
+            trackid = data[2]
             link = f"https://api.deezer.com/track/" + str(trackid)
             response = requests.get(link).text
             data = json.loads(response)
@@ -459,8 +460,8 @@ async def process_link(message: types.Message, state: FSMContext):
                 label = data["label"]
                 upc = data["upc"]
 
-                if label == "Firect Music":
-                    await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+                if label in config.dmca_labels:
+                    await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
                 os.makedirs("tracks", exist_ok=True)
@@ -517,8 +518,8 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         copyright = albumdata["copyrights"][0]["text"]
         albumname = albumdata["name"]
         output_dir = f"tracks/albums/{albumname}"
-        if "Firect Music" in copyright:
-            await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
+        if copyright in config.dmca_labels:
+            await message.reply(f"🛑 Загрузка релизов лейбла {copyright} запрещена!", parse_mode="markdown")
             await state.finish()
             return
 
@@ -564,29 +565,40 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         track_number = trackdata["track_number"]
         isrc = trackdata["external_ids"]["isrc"]
         title = trackdata["name"]
-        if check_label.check_label(trackdata["album"]["id"]) == False:
-            await message.reply("Загрузка релизов лейбла [Firect Music](https://firectmusic.ru) запрещена!", parse_mode="markdown")
-            await state.finish()
-            return
+
 
         deezer_req = f"https://api.deezer.com/track/isrc:" + str(isrc)
         response = requests.get(deezer_req).text
         dee_data = json.loads(response)
+        if 'error' in dee_data:
+            await message.answer("🚫 Загрузка данного трека невозможна!")
+            await state.finish()
+            return
         dee_album_link = dee_data["link"]
         dee_album_id = dee_data["album"]["id"]
+ 
 
         deezer_requpc = f"https://api.deezer.com/album/" + str(dee_album_id)
         response = requests.get(deezer_requpc).text
         dee_datakek = json.loads(response)
+        if 'error' in dee_datakek:
+            await message.answer("🚫 Загрузка данного трека невозможна!")
+            await state.finish()
+            return
         dee_upc = dee_datakek["upc"]
-        
+
+        label, status = spotify.check_label(trackdata["album"]["id"])
+        if status == True:
+            await message.reply(f"🚫 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
+            await state.finish()
+            return
         output_dir = f"tracks/singles/{title}"
         disc_number = trackdata["disc_number"]
         startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
         try:
             download.download_trackspo(f"https://open.spotify.com/track/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
-            await message.answer("Произошла ошибка! Сообщите разработчику")
+            await message.answer("😔 Произошла ошибка! Сообщите разработчику")
             await state.finish()
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
