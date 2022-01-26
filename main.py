@@ -109,6 +109,7 @@ async def process_upc(message: types.Message, state: FSMContext):
             download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
         except:
             await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await startdownload.delete()
             await state.finish()
         xd = os.listdir(output_dir)
         funnymoment = f"{output_dir}/{xd[0]}"
@@ -263,6 +264,7 @@ async def process_link(message: types.Message, state: FSMContext):
                     download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
                     await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await startdownload.delete()
                     await state.finish()
                     return
                 xd = os.listdir(output_dir)
@@ -332,6 +334,7 @@ async def process_link(message: types.Message, state: FSMContext):
                     download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
                     await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await startdownload.delete()
                     await state.finish()
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
@@ -408,6 +411,7 @@ async def process_link(message: types.Message, state: FSMContext):
                     download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
                     await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await startdownload.delete()
                     await state.finish()
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
@@ -485,6 +489,7 @@ async def process_link(message: types.Message, state: FSMContext):
                     download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
                     await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await startdownload.delete()
                     await state.finish()
                 xd = os.listdir(output_dir)
                 funnymoment = f"{output_dir}/{xd[0]}"
@@ -541,6 +546,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
             download.download_albumspo(f"https://open.spotify.com/album/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
             await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await startdownload.delete()
             await state.finish()
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
@@ -608,6 +614,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
             download.download_trackspo(f"https://open.spotify.com/track/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
             await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await startdownload.delete()
             await state.finish()
         releasedir = f"{output_dir}/{os.listdir(output_dir)[0]}" 
         separator = " - "
