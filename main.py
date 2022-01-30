@@ -586,7 +586,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         captionid = "captions." + "id" + str(message.chat.id)
         deezerkb = InlineKeyboardMarkup()
         deezerkb.add(InlineKeyboardButton('Слушать в Deezer', url=dee_album_link))
-        await bot.send_photo(message.from_user.id, cover, f"*{artists} - {title}*\n\n*Дата релиза:* _{release_date}_\n*UPC:* _{upc}_\n*Лейбл:* _© {copyright}_", parse_mode="markdown", reply_markup=deezerkb)
+        await bot.send_photo(message.from_user.id, cover, f"*{artists} - {title}*\n\n*Дата релиза:* _{release_date}_\n*UPC:* _{upc}_", parse_mode="markdown", reply_markup=deezerkb)
         for x in kolvotracks:
             f = open(f"{releasedir}/{x}","rb")
             try:
