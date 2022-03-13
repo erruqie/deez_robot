@@ -6,3 +6,4 @@ class UploadState(StatesGroup):
     sending_isrc = State()
     sending_link = State()
     sending_spotify_link = State()
+    sending_sber_link = State()

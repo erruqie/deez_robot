@@ -1,3 +1,4 @@
+from ast import Return
 import logging
 import requests
 import json
@@ -12,7 +13,7 @@ from aiogram import Bot, types, filters
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils import executor
+from aiogram.utils import executor, exceptions
 from aiogram.types import InputFile, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from deezloader.deezloader import DeeLogin
 from deezloader.exceptions import InvalidLink
@@ -27,12 +28,13 @@ download = DeeLogin(arl = config.deezer_arl)
 @dp.message_handler(filters.CommandStart())
 async def start(message: types.Message):
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    button_upc = KeyboardButton('Поиск по UPC')
-    button_isrc = KeyboardButton('Поиск по ISRC')
-    button_link = KeyboardButton('Поиск по ссылке с Deezer')
-    button_spotify = KeyboardButton('Поиск по ссылке с Spotify')
+    button_upc = KeyboardButton('UPC')
+    button_isrc = KeyboardButton('ISRC')
+    button_link = KeyboardButton('Deezer')
+    button_spotify = KeyboardButton('Spotify')
+    button_sber = KeyboardButton('Сберзвук')
     button_donate = KeyboardButton('Поддержать автора')
-    keyboard.row(button_upc, button_isrc, button_link, button_spotify)
+    keyboard.row(button_upc, button_isrc, button_link, button_spotify, button_sber)
     keyboard.add(button_donate)
     await message.reply("*🔥 Привет! Я бот для скачивания треков с Deezer\n🤖 Вот что я умею:\n/isrc* - _скачивание трека по ISRC за 9 часов до релиза_\n*/upc* - _скачивание альбома по UPC за 9 часов до релиза_\n*/link* - _скачивание релиза по ссылке за 9 часов до релиза_\n*/spotify* - _скачивание релиза по ссылке из spotify_\n\n*🧑‍💻 Разработчик: @uzkwphq*", parse_mode="markdown", reply_markup=keyboard)
 
@@ -42,25 +44,30 @@ async def donate(message: types.Message):
     donatekb.add(InlineKeyboardButton('Поддержать меня!', url='https://yoomoney.ru/to/4100112259262413'))
     await message.answer(f'*Deez Robot был создан одним лишь одним энтузиазтом-сливером на абсолютно бесплатной основе, да и к тому же с открытым исходным кодом.*\nБлагодаря твоему донату, у меня прибавится мотивация продолжать разработку этого бота и содержать его, чтобы именно ты мог им пользоваться!',parse_mode="markdown", reply_markup=donatekb)
 
-@dp.message_handler(filters.Text(equals=['Поиск по UPC', '/upc']), state=None)
+@dp.message_handler(filters.Text(equals=['UPC', '/upc']), state=None)
 async def album_download(message: types.Message):
     await message.reply("Введите UPC:")
     await UploadState.sending_upc.set()
 
-@dp.message_handler(filters.Text(equals=['Поиск по ISRC', '/isrc']), state=None)
+@dp.message_handler(filters.Text(equals=['ISRC', '/isrc']), state=None)
 async def album_download(message: types.Message):
     await message.reply("Введите ISRC:")
     await UploadState.sending_isrc.set()
 
-@dp.message_handler(filters.Text(equals=['Поиск по ссылке с Deezer','/link']), state=None)
+@dp.message_handler(filters.Text(equals=['Deezer','/link']), state=None)
 async def link_download(message: types.Message):
     await message.reply("*Отправьте ссылку на релиз в Deezer\nПримеры ссылок:* \n_https://www.deezer.com/album/284305192\nhttps://www.deezer.com/track/1607998182_", parse_mode="markdown")
     await UploadState.sending_link.set()
 
-@dp.message_handler(filters.Text(equals=['Поиск по ссылке с Spotify','/spotify']), state=None)
+@dp.message_handler(filters.Text(equals=['Spotify','/spotify']), state=None)
 async def spotify_download(message: types.Message):
     await message.reply("Отправь ссылку на трек в Spotify")
     await UploadState.sending_spotify_link.set()
+
+@dp.message_handler(filters.Text(equals=['Сберзвук','/sber']), state=None)
+async def sber_download(message: types.Message):
+    await message.reply("Отправь ссылку на трек в Сберзвук")
+    await UploadState.sending_sber_link.set()
 
 @dp.message_handler(state=UploadState.sending_upc)
 async def process_upc(message: types.Message, state: FSMContext):
@@ -565,7 +572,14 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         deezer_req = f"https://api.deezer.com/album/upc:" + str(upc)
         response = requests.get(deezer_req).text
         dee_data = json.loads(response)
-        dee_album_link = dee_data["link"]
+        if 'error' in dee_data:
+            await message.answer("🚫 Загрузка данного трека невозможна!")
+            await state.finish()
+            return
+        else:
+            dee_album_link = dee_data["link"]
+            deezerkb = InlineKeyboardMarkup()
+            deezerkb.add(InlineKeyboardButton('Слушать в Deezer', url=dee_album_link))
         startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
         try:
             download.download_albumspo(f"https://open.spotify.com/album/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
@@ -583,8 +597,6 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         title = title_tosplit.split(separator_title)[2]
         kolvotracks = os.listdir(releasedir)
         captionid = "captions." + "id" + str(message.chat.id)
-        deezerkb = InlineKeyboardMarkup()
-        deezerkb.add(InlineKeyboardButton('Слушать в Deezer', url=dee_album_link))
         await bot.send_photo(message.from_user.id, cover, f"*{artists} - {title}*\n\n*Дата релиза:* _{release_date}_\n*UPC:* _{upc}_", parse_mode="markdown", reply_markup=deezerkb)
         for x in kolvotracks:
             f = open(f"{releasedir}/{x}","rb")
@@ -653,12 +665,47 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
             try:
                 audio_caption = eval(captionid)[0]
                 await bot.send_audio(message.from_user.id, f, caption=audio_caption, parse_mode="markdown")
+                await message.reply("*Готово!*", parse_mode="markdown")
             except:
                 await bot.send_audio(message.from_user.id, f, caption='[DeezRobot](t.me/deez_robot)', parse_mode="markdown")
                 await message.reply("*Готово!*", parse_mode="markdown")
         await startdownload.delete()
         await state.finish()
         shutil.rmtree(releasedir, ignore_errors=True)
+
+@dp.message_handler(state=UploadState.sending_sber_link)
+async def process_sber_link(message: types.Message, state: FSMContext):
+    link = message.text
+    if not validators.url(link):
+        await message.reply("*Вы отправили невалидную ссылку!\nПример ссылки:* _https://sber-zvuk.com/track/113386431_", parse_mode="markdown")
+        await state.finish()
+        return
+    separator = "/"
+    parse_object = urlparse(link)
+    aboba = parse_object.path
+    parsed = aboba.split(separator)
+    trackid = parsed[2]
+    captionid = "captions." + "id" + str(message.chat.id)
+    startdownload = await message.answer("*Начинаю скачивание!*", parse_mode="markdown")
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36'
+    }
+    response = requests.get(f'https://sber-zvuk.com/api/tiny/track/stream?id={trackid}', headers=headers).text
+    data = json.loads(response)
+    if 'error' in data:
+        await message.answer('😔 К сожалению по этому треку нет информации')
+        await startdownload.delete()
+        await state.finish()
+        return
+    else:
+        try:
+            audio_caption = eval(captionid)[0]
+        except:
+            audio_caption = '[DeezRobot](t.me/deez_robot)'
+        await bot.send_audio(message.chat.id, json.loads(response)["result"]["stream"], caption=audio_caption, parse_mode="markdown")
+        await startdownload.delete()
+        await state.finish()
+        return
 
 if __name__ == '__main__':
     executor.start_polling(dp)
