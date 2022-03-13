@@ -1,4 +1,3 @@
-from ast import Return
 import logging
 import requests
 import json
@@ -13,7 +12,7 @@ from aiogram import Bot, types, filters
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils import executor, exceptions
+from aiogram.utils import executor
 from aiogram.types import InputFile, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from deezloader.deezloader import DeeLogin
 from deezloader.exceptions import InvalidLink
