@@ -1,7 +1,6 @@
 __pycache__
 .cache
 tracks
-dmca_list.py
 .venv
 .env
 captions.py
