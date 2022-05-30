@@ -5,7 +5,7 @@ import datetime
 import os
 import re
 import shutil
-import config
+import dmca_list
 import captions
 import validators
 from aiogram import Bot, types, filters
@@ -18,11 +18,13 @@ from deezloader.deezloader import DeeLogin
 from deezloader.exceptions import InvalidLink
 from urllib.parse import urlparse
 from states import UploadState
+from dotenv import load_dotenv
 from utils import spotify
+load_dotenv('.env')
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=config.TOKEN)
+bot = Bot(token=os.environ.get('TG_TOKEN'))
 dp = Dispatcher(bot, storage=MemoryStorage())
-download = DeeLogin(arl = config.deezer_arl)
+download = DeeLogin(arl=os.environ.get('deezer_arl'))
 
 @dp.message_handler(filters.CommandStart())
 async def start(message: types.Message):
@@ -87,7 +89,7 @@ async def process_upc(message: types.Message, state: FSMContext):
         covermd5 = data["md5_image"]
         nb_tracks = data["nb_tracks"]
         label = data["label"]
-        if label in config.dmca_labels:
+        if label in dmca_list.dmca_labels:
             await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
             await state.finish()
             return
@@ -188,7 +190,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
                 await message.answer("😔 К сожалению по этому альбому нет более подробной информации")
         else:
             label = data["label"]
-            if label in config.dmca_labels:
+            if label in dmca_list.dmca_labels:
                 await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                 await state.finish()
                 return
@@ -255,7 +257,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 covermd5 = data["md5_image"]
                 nb_tracks = data["nb_tracks"]
                 label = data["label"]
-                if label in config.dmca_labels:
+                if label in dmca_list.dmca_labels:
                     await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
@@ -348,7 +350,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 label = data["label"]
                 upc = data["upc"]
 
-                if label in config.dmca_labels:
+                if label in dmca_list.dmca_labels:
                     await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
@@ -406,7 +408,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 covermd5 = data["md5_image"]
                 nb_tracks = data["nb_tracks"]
                 label = data["label"]
-                if label in config.dmca_labels:
+                if label in dmca_list.dmca_labels:
                     await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                     await state.finish()
                     return
@@ -507,7 +509,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 else:
                     label = data["label"]
                     upc = data["upc"]
-                    if label in config.dmca_labels:
+                    if label in dmca_list.dmca_labels:
                         await message.reply(f"🛑 Загрузка релизов лейбла {label} запрещена!", parse_mode="markdown")
                         await state.finish()
                         return

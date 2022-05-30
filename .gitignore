@@ -1,8 +1,9 @@
 __pycache__
 .cache
 tracks
-config.py
+dmca_list.py
 .venv
+.env
 captions.py
 .cache_spoty_token.json
 restart
