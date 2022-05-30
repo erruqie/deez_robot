@@ -37,7 +37,7 @@ async def start(message: types.Message):
     button_donate = KeyboardButton('Поддержать автора')
     keyboard.row(button_upc, button_isrc, button_link, button_spotify, button_sber)
     keyboard.add(button_donate)
-    await message.reply("*🔥 Привет! Я бот для скачивания треков с Deezer\n🤖 Вот что я умею:\n/isrc* - _скачивание трека по ISRC за 9 часов до релиза_\n*/upc* - _скачивание альбома по UPC за 9 часов до релиза_\n*/link* - _скачивание релиза по ссылке за 9 часов до релиза_\n*/spotify* - _скачивание релиза по ссылке из Spotify_\n*/sber* - _скачивание трека по ссылке из Сберзвука_\n*/donate* - _поддержать автора_\n\n*🧑‍💻 Разработчик: @uzkwphq*", parse_mode="markdown", reply_markup=keyboard)
+    await message.reply("*🔥 Привет! Я бот для скачивания треков с Deezer\n🤖 Вот что я умею:\n/isrc* - _скачивание трека по ISRC за 9 часов до релиза_\n*/upc* - _скачивание альбома по UPC за 9 часов до релиза_\n*/link* - _скачивание релиза по ссылке за 9 часов до релиза_\n*/spotify* - _скачивание релиза по ссылке из Spotify_\n*/sber* - _скачивание трека по ссылке из Сберзвука_\n*/donate* - _поддержать автора_\n\n*🧑‍💻 Разработчик: @clownl3ss*", parse_mode="markdown", reply_markup=keyboard)
 
 @dp.message_handler(filters.Text(equals=['Поддержать автора', '/donate']), state=None)
 async def donate(message: types.Message):
@@ -126,7 +126,7 @@ async def process_upc(message: types.Message, state: FSMContext):
         try:
             download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
         except:
-            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
             await startdownload.delete()
             await state.finish()
         xd = os.listdir(output_dir)
@@ -200,7 +200,7 @@ async def process_isrc(message: types.Message, state: FSMContext):
         try:
             download.download_trackdee(f"{track_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
         except:
-            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
             await state.finish()
             return
         xd = os.listdir(output_dir)
@@ -295,7 +295,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
                     await startdownload.delete()
                     await state.finish()
                     return
@@ -367,7 +367,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
                     await startdownload.delete()
                     await state.finish()
                 xd = os.listdir(output_dir)
@@ -446,7 +446,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_albumdee(f"{album_link}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
                     await startdownload.delete()
                     await state.finish()
                 xd = os.listdir(output_dir)
@@ -525,7 +525,7 @@ async def process_link(message: types.Message, state: FSMContext):
                 try:
                     download.download_trackdee(f"https://www.deezer.com/track/{trackid}",output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=0)
                 except:
-                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+                    await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
                     await startdownload.delete()
                     await state.finish()
                     return
@@ -585,7 +585,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         try:
             download.download_albumspo(f"https://open.spotify.com/album/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
-            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
             await startdownload.delete()
             await state.finish()
             return
@@ -648,7 +648,7 @@ async def process_spotify_link(message: types.Message, state: FSMContext):
         try:
             download.download_trackspo(f"https://open.spotify.com/track/{data[2]}", output_dir=output_dir,quality_download="MP3_128",recursive_quality=False,recursive_download=True,not_interface=False,method_save=1)
         except:
-            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/uzkwphq)", parse_mode="markdown")
+            await message.answer("😔 Произошла ошибка! Сообщите [разработчику](t.me/clownl3ss)", parse_mode="markdown")
             await startdownload.delete()
             await state.finish()
             return
