@@ -3,7 +3,6 @@ __pycache__
 tracks
 .venv
 .env
-captions.py
 .cache_spoty_token.json
 restart
 stop
